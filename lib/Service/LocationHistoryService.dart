@@ -4,7 +4,7 @@ import 'package:fyp_final/SharedData/UserDetails.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-import '../SharedData/SqlfLite.dart'; // make sure your SQLite helper handles the required fields
+import '../SharedData/SqlfLite.dart';
 
 class LocationSyncService {
   static final LocationSyncService _instance = LocationSyncService._internal();
@@ -14,8 +14,8 @@ class LocationSyncService {
   StreamSubscription<Position>? _positionSub;
   StreamSubscription<ConnectivityResult>? _connectivitySub;
 
-  final String _apiUrl =
-      '${UserData.getUrl()}/UserTripLog/Add'; // <-- Change this
+  final String _apiUrl = '${UserData.getUrl()}/UserTripLog/Add';
+
   Position? _startPosition;
   DateTime? _startTime;
   DateTime? _lastMovedTime;
@@ -48,14 +48,14 @@ class LocationSyncService {
       );
 
       if (distance >= 50) {
-        // Significant movement detected
+        // User moved 50 meters, update last moved time
         _lastMovedTime = now;
       }
 
       final timeSinceLastMove = now.difference(_lastMovedTime!).inMinutes;
 
-      if (timeSinceLastMove >= 5) {
-        // User has not moved significantly for 5 minutes — end the trip
+      if (timeSinceLastMove >= 3) {
+        // End current trip and start new one
         final trip = {
           'UserId': UserData.UserId,
           'StartLatitude': _startPosition!.latitude,
@@ -68,25 +68,23 @@ class LocationSyncService {
 
         if (isOnline) {
           await _sendTripToServer(trip);
-          await _syncStoredTrips();
+          await _syncStoredTrips(); // Send all unsynced data if online
         } else {
           await DBHelper.insertTrip(trip);
         }
 
-        // Reset for new trip
+        // Reset for next trip
         _startPosition = pos;
         _startTime = now;
         _lastMovedTime = now;
       }
     });
 
-    _connectivitySub =
-        Connectivity().onConnectivityChanged.listen((result) async {
-              if (result != ConnectivityResult.none) {
-                await _syncStoredTrips();
-              }
-            })
-            as StreamSubscription<ConnectivityResult>?;
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((result) async {
+      if (result != ConnectivityResult.none) {
+        await _syncStoredTrips();
+      }
+    }) as StreamSubscription<ConnectivityResult>?;
   }
 
   Future<void> stop() async {
@@ -106,7 +104,7 @@ class LocationSyncService {
         throw Exception('Failed to send trip: ${res.statusCode}');
       }
     } catch (e) {
-      await DBHelper.insertTrip(trip); // fallback
+      await DBHelper.insertTrip(trip); // store offline if sending fails
     }
   }
 
@@ -118,7 +116,7 @@ class LocationSyncService {
         await _sendTripToServer(trip);
         await DBHelper.markTripAsSynced(trip['id']);
       } catch (_) {
-        return; // stop on first failure
+        break; // stop on first failure to avoid rapid retries
       }
     }
   }
@@ -130,7 +128,6 @@ class LocationSyncService {
 
   Future<bool> _checkPermission() async {
     final status = await Geolocator.requestPermission();
-    return status == LocationPermission.always ||
-        status == LocationPermission.whileInUse;
+    return status == LocationPermission.always || status == LocationPermission.whileInUse;
   }
 }

@@ -36,7 +36,7 @@ class UserData {
   static int selectedUserIdForLocationHistory = 0;
 
   static String getUrl() {
-    return "http://192.168.1.26";
+    return "http://192.168.1.19";
   }
 
 

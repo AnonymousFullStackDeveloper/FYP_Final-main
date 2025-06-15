@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:fyp_final/Model/GeoFenceFriendsNotification.dart';
 import 'package:fyp_final/Service/LocationHistoryService.dart';
 import 'package:fyp_final/SharedData/PreferencedVariable.dart';
 import 'package:fyp_final/SharedData/UserDetails.dart';
@@ -9,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
+
 
 class LiveLocationApp2 extends StatelessWidget {
   const LiveLocationApp2({super.key});
@@ -55,13 +57,83 @@ class _LiveLocationScreenState extends State<LiveLocationScreen> {
   void initState() {
     super.initState();
     _initializeApp();
-    if (UserData.userGroupFriendsLiveLocation.isEmpty) {
+
       _fetchFriendsData();
-    } else {
       _addFriendMarkers(UserData.userGroupFriendsLiveLocation);
-    }
+
     LocationSyncService().start();
   }
+
+
+
+// Tracks user state per geofence
+  Map<int, bool> _geofenceEntryState = {}; // geofenceId → isInside
+
+  Future<void> compareLocationAndNotify({
+    required int userId,
+    required int geofenceId,
+    required String geofenceTitle,
+    required double geofenceLat,
+    required double geofenceLng,
+    required double geofenceRadius,
+    required double userLat,
+    required double userLng,
+  }) async {
+    double distance = Geolocator.distanceBetween(
+      userLat,
+      userLng,
+      geofenceLat,
+      geofenceLng,
+    );
+
+    bool isInside = distance <= geofenceRadius;
+    bool wasInside = _geofenceEntryState[geofenceId] ?? false;
+
+    // ENTER: Was outside, now inside
+    if (isInside && !wasInside) {
+      _geofenceEntryState[geofenceId] = true;
+      await _sendGeofenceNotification(
+        userId,
+        geofenceId,
+        "User $userId entered geofence $geofenceTitle",
+      );
+    }
+
+    // EXIT: Was inside, now outside
+    else if (!isInside && wasInside) {
+      _geofenceEntryState[geofenceId] = false;
+      await _sendGeofenceNotification(
+        userId,
+        geofenceId,
+        "User $userId exited geofence $geofenceTitle",
+      );
+    }
+
+    // Else: No change → Do nothing
+  }
+  Future<void> _sendGeofenceNotification(
+      int userId, int geofenceId, String message) async {
+    final body = {
+      "userId": userId,
+      "geofenceId": geofenceId,
+      "message": message,
+      "timestamp": DateTime.now().toIso8601String(),
+      "type": "geofence"
+    };
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/notifications'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      print("✅ Notification sent: $message");
+    } else {
+      print("❌ Failed to send: ${response.body}");
+    }
+  }
+
 
   Future<void> _initializeApp() async {
     try {
@@ -76,6 +148,8 @@ class _LiveLocationScreenState extends State<LiveLocationScreen> {
         // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.bestForNavigation,
       );
+
+
 
       _lastPosition = initialPosition;
       _updateCurrentLocation(initialPosition);
@@ -126,6 +200,8 @@ class _LiveLocationScreenState extends State<LiveLocationScreen> {
       });
     }
   }
+
+
 
   void _addFriendMarkers(List<dynamic> friendsData) {
     for (var friend in friendsData) {
@@ -218,7 +294,7 @@ class _LiveLocationScreenState extends State<LiveLocationScreen> {
       } else {
         print("Response status: ${response.statusCode}");
         print("Response body: ${response.body}");
-        throw Exception('Failed to update location in the database');
+        // throw Exception('Failed to update location in the database');
       }
     } catch (e) {
       _showErrorDialog('Database Error', e.toString());
