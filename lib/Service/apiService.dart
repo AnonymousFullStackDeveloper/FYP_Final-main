@@ -207,9 +207,10 @@ class ApiService {
     await init(); // Ensure prefs is initialized
     StorageManager storageManager = StorageManager();
     int? id = await storageManager.getSelectedGroupId();
+    int uid = UserData.UserId;
     print("Selected Group In : ${id}");
 
-    final url = Uri.parse('$baseUrl/GroupMember/GetByGroupId/${id}');
+    final url = Uri.parse('$baseUrl/GroupMember/GetByGroupId?gId=$id&uid=$uid');
     print(UserData.selectedGroup);
 
     try {

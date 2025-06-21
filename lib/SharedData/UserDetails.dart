@@ -26,9 +26,7 @@ class UserData {
   static List<GeofenceFriend> selectedFriends = [];
   static late GeofenceEntity SelectedGeofenceEntity;
 
-
-
-  static String localGroupCode="";
+  static String localGroupCode = "";
 
   static bool isUpdateGeofenec = false;
 
@@ -36,9 +34,9 @@ class UserData {
   static int selectedUserIdForLocationHistory = 0;
 
   static String getUrl() {
-    return "http://192.168.1.19";
+    return "http://192.168.1.26";
+    // return "http://52.25.62.21:8080";
   }
-
 
   static int UserId = 0;
 

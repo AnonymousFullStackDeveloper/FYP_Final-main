@@ -194,6 +194,9 @@ class _DraggableScrollableSheetExampleState
                                           print(
                                             "Home Screen Me Tracking : $isTrackingAllowed1",
                                           );
+
+
+
                                         });
                                       },
                                     ),
@@ -274,6 +277,7 @@ class _DraggableScrollableSheetExampleState
                                 ) {
                                   var friend = filteredFriends[index];
                                   String id = friend["User_Id"].toString();
+                                  String per = friend["per"].toString();
                                   String friendName =
                                       friend["Name"]?.toString() ?? "Unknown";
                                   Color friendColor =
@@ -281,6 +285,7 @@ class _DraggableScrollableSheetExampleState
                                           Colors.primaries.length];
 
                                   return FriendTile(
+                                    Permission :per,
                                     id: id,
                                     friendName: friendName,
                                     friendColor: friendColor,
@@ -315,6 +320,7 @@ class _DraggableScrollableSheetExampleState
 class FriendTile extends StatefulWidget {
   final String id;
   final String friendName;
+  final String Permission;
   final Color friendColor;
   final String friendEmail;
 
@@ -322,6 +328,7 @@ class FriendTile extends StatefulWidget {
     super.key,
     required this.id,
     required this.friendName,
+    required this.Permission,
     required this.friendColor,
     required this.friendEmail,
   });
@@ -349,9 +356,12 @@ class _FriendTileState extends State<FriendTile> {
           ),
           title: Text(widget.friendName, style: const TextStyle(fontSize: 18)),
           trailing: Switch(
-            value: isTrackingAllowed,
-            onChanged: (value) => setState(() => isTrackingAllowed = value),
+            value: widget.Permission == 'Allow' ? isTrackingAllowed : false,
+            onChanged: widget.Permission == 'Allow'
+                ? (value) => setState(() => isTrackingAllowed = true)
+                : (value) => setState(() => isTrackingAllowed = false), // disables the switch when permission is not 'Allow'
           ),
+
           onTap: () {
             // Handle your tap event here
             print('User Timeline Clicked! ${widget.id}');

@@ -63,22 +63,25 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
   void _loadData() async {
     final userId = await storageManager.getUserId();
 
-      centerPoint = LatLng(UserData.latitudeGeofence, UserData.longitudeGeofence);
+    centerPoint = LatLng(UserData.latitudeGeofence, UserData.longitudeGeofence);
 
-      print(centerPoint);
-      List<Friend> tempFriends = UserData.userGroupFriends
-          .where((element) => element['User_Id'] != userId)
-          .map((element) => Friend(
-        id: element['User_Id'],
-        name: element['Name'],
-        notifyOnEnter: false,
-        notifyOnExit: false,
-      ))
-          .toList();
+    print(centerPoint);
+    List<Friend> tempFriends =
+        UserData.userGroupFriends
+            .where((element) => element['User_Id'] != userId)
+            .map(
+              (element) => Friend(
+                id: element['User_Id'],
+                name: element['Name'],
+                notifyOnEnter: false,
+                notifyOnExit: false,
+              ),
+            )
+            .toList();
 
-      setState(() {
-        friends = tempFriends;
-      });
+    setState(() {
+      friends = tempFriends;
+    });
     // } else {
     //   for (var gf in UserData.UserGeofenceDetails) {
     //     nameController.text = gf.name;
@@ -151,13 +154,16 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
 
     setState(() => isLoading = true);
 
-    List<GeofenceFriend> fr = friends
-        .map((f) => GeofenceFriend(
-      friendId: f.id,
-      arrive: f.notifyOnEnter,
-      leave: f.notifyOnExit,
-    ))
-        .toList();
+    List<GeofenceFriend> fr =
+        friends
+            .map(
+              (f) => GeofenceFriend(
+                friendId: f.id,
+                arrive: f.notifyOnEnter,
+                leave: f.notifyOnExit,
+              ),
+            )
+            .toList();
 
     GeofenceEntity geofenceEntry = GeofenceEntity(
       GeofenceId: 0,
@@ -175,9 +181,9 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
     setState(() => isLoading = false);
 
     if (res == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geofence Added!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Geofence Added!')));
       _loadData();
     }
   }
@@ -198,7 +204,10 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
             height: mapHeight,
             child: FlutterMap(
               options: MapOptions(
-                initialCenter: LatLng(centerPoint!.latitude, centerPoint!.longitude) ,
+                initialCenter: LatLng(
+                  centerPoint!.latitude,
+                  centerPoint!.longitude,
+                ),
                 initialZoom: 15,
               ),
               children: [
@@ -266,8 +275,18 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                             children: [
                               Expanded(
                                 child: Slider(
-                                  activeColor: const Color.fromRGBO(134, 82, 255, 0.7),
-                                  inactiveColor: const Color.fromRGBO(134, 82, 255, 0.3),
+                                  activeColor: const Color.fromRGBO(
+                                    134,
+                                    82,
+                                    255,
+                                    0.7,
+                                  ),
+                                  inactiveColor: const Color.fromRGBO(
+                                    134,
+                                    82,
+                                    255,
+                                    0.3,
+                                  ),
                                   value: radius,
                                   min: minRadius,
                                   max: maxRadius,
@@ -287,7 +306,10 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                               children: [
                                 Text(
                                   "Get notified When...",
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),
@@ -306,29 +328,49 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                                         Expanded(
                                           child: Text(
                                             friend.name,
-                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
                                         Column(
                                           children: [
                                             Row(
                                               children: [
-                                                const Text("Arrive", style: TextStyle(fontWeight: FontWeight.bold)),
+                                                const Text(
+                                                  "Arrive",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                                 Switch(
                                                   value: friend.notifyOnEnter,
                                                   onChanged: (val) {
-                                                    setState(() => friend.notifyOnEnter = val);
+                                                    setState(
+                                                      () =>
+                                                          friend.notifyOnEnter =
+                                                              val,
+                                                    );
                                                   },
                                                 ),
                                               ],
                                             ),
                                             Row(
                                               children: [
-                                                const Text("Leave", style: TextStyle(fontWeight: FontWeight.bold)),
+                                                const Text(
+                                                  "Leave",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                                 Switch(
                                                   value: friend.notifyOnExit,
                                                   onChanged: (val) {
-                                                    setState(() => friend.notifyOnExit = val);
+                                                    setState(
+                                                      () =>
+                                                          friend.notifyOnExit =
+                                                              val,
+                                                    );
                                                   },
                                                 ),
                                               ],
@@ -351,16 +393,17 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: isLoading ? null : saveGeofence,
-                      child: isLoading
-                          ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                          : const Text("Save Geofence"),
+                      child:
+                          isLoading
+                              ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : const Text("Save Geofence"),
                     ),
                   ),
                 ],

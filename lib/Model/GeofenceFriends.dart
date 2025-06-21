@@ -16,12 +16,23 @@ class GeofenceFriend {
       leave: json['Leave'] as bool,
     );
   }
+  @override
+  String toString() {
+    return 'GeofenceFriend(friendId: $friendId)';
+  }
 
   Map<String, dynamic> toJson() => {
     'FriendId': friendId,
     'Arrive': arrive,
     'Leave': leave,
   };
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': friendId, // Assuming friendId is the same as userId
+      'Enter': arrive, // Replace with actual value if available
+      'Exit': leave, // Replace with actual value if available
+    };
+  }
 }
 
 class GeofenceEntity {
@@ -44,6 +55,21 @@ class GeofenceEntity {
     required this.name,
     required this.friends,
   });
+
+  @override
+  String toString() {
+    return '''
+GeofenceEntity(
+  GeofenceId: $GeofenceId,
+  userId: $userId,
+  groupId: $groupId,
+  latitude: $latitude,
+  longitude: $longitude,
+  radius: $radius,
+  name: $name,
+  friends: $friends
+)''';
+  }
 
   /// Parses a single JSON object into a GeofenceEntity
   factory GeofenceEntity.fromJson(Map<String, dynamic> json) {
